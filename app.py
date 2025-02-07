@@ -1,10 +1,14 @@
+import logging
 from flask import Flask, jsonify
 import myfitnesspal
 import os
-import logging
 
-# Configuração do logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filename='app.log', filemode='a')
+# Configuração de logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Altere o nível conforme necessário (DEBUG, INFO, ERROR)
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]  # Exibir os logs no console
+)
 
 app = Flask(__name__)
 
@@ -16,23 +20,13 @@ client = myfitnesspal.Client(MFP_USER, MFP_PASS)
 @app.route('/nutrientes/<data>', methods=['GET'])
 def obter_nutrientes(data):
     try:
-        logging.info(f'Iniciando requisição para obter dados nutricionais do dia {data}')
-        
-        # Tentando obter os dados nutricionais para a data especificada
+        app.logger.info(f"Buscando dados nutricionais para a data: {data}")  # Log para rastrear
         day = client.get_date(data)
-        
-        # Log de sucesso
-        logging.info(f'Dados nutricionais obtidos para {data}: {day.totals}')
-        
+        app.logger.info(f"Dados encontrados: {day.totals}")  # Log dos dados encontrados
         return jsonify(day.totals)
-    
     except Exception as e:
-        # Log de erro caso ocorra uma exceção
-        logging.error(f'Erro ao obter dados nutricionais para {data}: {str(e)}')
+        app.logger.error(f"Erro ao obter dados nutricionais: {str(e)}")  # Log de erro
         return jsonify({"erro": str(e)}), 500
 
 if __name__ == '__main__':
-    # Log de inicialização do servidor
-    logging.info('Iniciando servidor Flask...')
-    
     app.run(host="0.0.0.0", port=5000)
